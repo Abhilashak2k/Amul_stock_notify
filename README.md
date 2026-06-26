@@ -2,7 +2,7 @@
 
 Tiny Chrome extension that watches the [Amul Whey Protein product page](https://shop.amul.com/en/product/amul-whey-protein-32-g-or-pack-of-60-sachets) and fires a Chrome notification the moment the "Sold Out" alert disappears.
 
-Polls every 5 minutes. Requires the product tab to stay open.
+Reloads the product tab every 5 minutes (so the server returns fresh stock data) and checks the rendered DOM. Requires the product tab to stay open.
 
 ## Files
 
@@ -64,13 +64,16 @@ A Chrome notification should pop up titled **"Amul Whey in stock!"**. If it does
 
 ## How it detects stock
 
-The product page renders this element when out of stock:
+The product page renders these elements when out of stock:
 
 ```html
 <div class="alert alert-danger mt-3">Sold Out</div>
+<button class="btn btn-primary product_enquiry ...">Notify Me</button>
 ```
 
-When the product is back in stock, that element is gone. `content.js` polls for it every 5 minutes; if the previous check was "out" and the current check is "in", it messages the background service worker, which fires `chrome.notifications.create(...)`.
+Both disappear when the product is in stock. `content.js` checks for either signal, persists the last known state via `chrome.storage.local`, and then reloads the page every 5 minutes to get fresh stock data from the server (the Amul page does not auto-refresh stock on its own).
+
+If the previous check was "out" and the current check is "in", it messages the background service worker, which fires `chrome.notifications.create(...)`. The notification uses `requireInteraction: true` so it stays on screen until you click it.
 
 ## Tuning
 
@@ -81,8 +84,9 @@ When the product is back in stock, that element is gone. `content.js` polls for 
 ## Caveats
 
 - Tab close = watcher dead. Keep the product tab open and pinned.
-- Chrome service workers can sleep; the content script polling is what drives the check, so this is fine.
-- No retry on transient DOM hiccups — false negatives just mean you wait one more cycle.
+- The tab visibly reloads every 5 minutes. Don't use that tab for anything else — any scroll or interaction will be interrupted on the next reload.
+- Chrome service workers can sleep; the content script drives the cycle, so this is fine.
+- First-load DOM hydration is given a 3-second grace period before checking, to avoid a false "in stock" notification from a not-yet-rendered Vue page.
 
 ## Uninstall
 

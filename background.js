@@ -5,7 +5,8 @@ chrome.runtime.onMessage.addListener((msg) => {
       iconUrl: "icon.png",
       title: "Amul Whey in stock!",
       message: "Go buy now: shop.amul.com",
-      priority: 2
+      priority: 2,
+      requireInteraction: true
     });
   }
 });
