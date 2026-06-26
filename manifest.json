@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Amul Whey Stock Watcher",
+  "version": "1.0",
+  "permissions": ["notifications"],
+  "host_permissions": ["https://shop.amul.com/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://shop.amul.com/en/product/amul-whey-protein-32-g-or-pack-of-60-sachets*"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": { "128": "icon.png" }
+}
